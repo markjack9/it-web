@@ -5,29 +5,7 @@
     <div class="g-logo">
       <img class="g-logo-img" src="/images/logo.png" alt="logo">
     </div>
-    <div class="g-title">一个活泼的小猫</div>
-    <div class="g-nav">
-      <router-link to="dashboard" active-class="dashboard" >仪表盘</router-link>
-      <router-link to="setting" active-class="dashboard">配置</router-link>
-      <router-link to="manage" active-class="dashboard">管理</router-link>
-      <router-link to="recording" active-class="dashboard">记录</router-link>
-    </div>
-    <div class="g-profile" >
-      <div class="flex flex-wrap items-center">
-        <el-dropdown @command="handleCommand">
-          <el-button type="primary">
-           管理员<el-icon class="el-icon--right"><arrow-down /></el-icon>
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu >
-              <el-dropdown-item  command="reset-password">重置密码</el-dropdown-item>
-              <el-dropdown-item  command="exit">退出</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-
-      </div>
-    </div>
+    <div class="g-title">IT组</div>
   </div>
 
 </template>

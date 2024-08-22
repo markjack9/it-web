@@ -9,13 +9,13 @@
               <el-statistic :value="hosttotal">
                 <template #title>
                   <div style="display: inline-flex; align-items: center">
-                    主机数量
+                    会议室总数
                   </div>
                 </template>
               </el-statistic>
               <div class="statistic-footer">
                 <div class="footer-item">
-                  <span>新增主机数量</span>
+                  <span>新增数量</span>
                   <span class="green">
               {{addhosttotal}}
               <el-icon>
@@ -31,13 +31,29 @@
               <el-statistic :value="hostonline">
                 <template #title>
                   <div style="display: inline-flex; align-items: center">
-                    当前在线数量
+                    <el-button @click="todayreadymeetroom = true;todaynotnullgetdate()">今日已巡检数量</el-button>
+                    <el-dialog
+                        v-model="todayreadymeetroom"
+                        :before-close="closedialog"
+                        :show-close="false"
+                        title="今日已巡检会议室"
+                    style="width: 350px">
+                      <el-row :gutter="20">
+                        <el-col v-for="(item, index) in todaynotnullstr" :key="index" :span="8">
+                          <el-card class="box-card">
+                            <div slot="header" class="clearfix">
+                              <span>{{ item }}</span>
+                            </div>
+                          </el-card>
+                        </el-col>
+                      </el-row>
+                    </el-dialog>
                   </div>
                 </template>
               </el-statistic>
               <div class="statistic-footer">
                 <div class="footer-item">
-                  <span>在线率</span>
+                  <span>已巡检占比</span>
                   <span class="green">
               {{ onlinerate }}%
               <el-icon>
@@ -53,13 +69,29 @@
               <el-statistic :value="hostoffline" title="New transactions today">
                 <template #title>
                   <div style="display: inline-flex; align-items: center">
-                    当前离线数量
+                    <el-button @click="todaynotreadymeetroom = true;todaynullgetdate()">今日未巡检数量</el-button>
+                    <el-dialog
+                        v-model="todaynotreadymeetroom"
+                        :before-close="closedialog"
+                        :show-close="false"
+                        title="今日未巡检会议室"
+                        style="width: 350px">
+                      <el-row :gutter="20">
+                        <el-col v-for="(item, index) in todaynullstr" :key="index" :span="8">
+                          <el-card class="box-card">
+                            <div slot="header" class="clearfix">
+                              <span>{{ item }}</span>
+                            </div>
+                          </el-card>
+                        </el-col>
+                      </el-row>
+                    </el-dialog>
                   </div>
                 </template>
               </el-statistic>
               <div class="statistic-footer">
                 <div class="footer-item">
-                  <span>设备离线率</span>
+                  <span>未巡检占比</span>
                   <span class="red">
               {{offlinerate}}%
               <el-icon>
@@ -75,20 +107,37 @@
     </div>
     <div>
 <el-card class="host-card">
+  <el-button @click="userinfolist = true;userlistget()">人员对照表</el-button>
+  <el-dialog
+      v-model="userinfolist"
+      :show-close="false"
+      title="人员对照表">
+    <el-table :data="userlistinfodate" style="width: 100%">
+      <!-- 用户名列 -->
+      <el-table-column prop="UserName" label="用户名" width="180">
+      </el-table-column>
+
+      <!-- 会议室列 -->
+      <el-table-column prop="MeetRoom" label="会议室">
+        <template v-slot="scope">
+          <!-- 直接显示会议室列表 -->
+          <span>{{ scope.row.MeetRoom }}</span>
+        </template>
+      </el-table-column>
+    </el-table>
+  </el-dialog>
   <el-table
       :data="tableData"
-      style="width: 100%"
+      style="width: auto"
       class="host-card-list"
   >
-    <el-table-column prop="hostid" label="序号" width="80" align="center" />
-    <el-table-column prop="hostname" label="主机名" width="120" align="center" />
-    <el-table-column prop="systemtype" label="系统版本" width="120" align="center" />
-    <el-table-column prop="hoststatus" :formatter="statusicon" label="主机状态" width="120" align="center" />
-    <el-table-column prop="hostip" label="主机IP" width="120" align="center" />
-    <el-table-column prop="hostissues" label="问题" width="120" align="center" />
-    <el-table-column prop="hostlocation" label="主机位置" width="120" align="center" />
-    <el-table-column prop="hostowner" label="主机负责人" width="120" align="center" />
-    <el-table-column prop="hostuptime" label="主机运行时间" width="120" align="center" />
+    <el-table-column prop="Number" label="序号" width="80" align="center" />
+    <el-table-column prop="MeetRoom" label="会议室名称" width="200" align="center" />
+    <el-table-column prop="MeetStatus" :formatter="statusicon" label="巡检状态" width="200" align="center" />
+    <el-table-column prop="RoomIP" label="设备IP" width="200" align="center" />
+    <el-table-column prop="MeetOwner" label="巡检人员" width="200" align="center" />
+    <el-table-column prop="StartTime" label="巡检时间" width="200" align="center" />
+    <el-table-column prop="Note" label="巡检记录" width="200" align="center" />
   </el-table>
 </el-card>
     </div>
@@ -112,18 +161,22 @@ import {
 import {onMounted, ref} from 'vue'
 import { ElTable } from 'element-plus'
 import axios from 'axios';
-interface Hostinfo {
-hostid: number
-  hostname: string
-  systemtype: string
-  hoststatus: boolean
-  hostip: string
-  hostissues: number
-  hostlocation: string
-  hostowner: string
-  hostuptime: string
+interface meetroomdate {
+Number: number
+  MeetRoom: string
+  MeetStatus: string
+ RoomIP: string
+  MeetOwner: string
+  StartTime: string
+ Note: string
 }
-const hosttotal = ref(0)
+const userlistinfodate = ref([]);
+const todaynotnullstr = ref([])
+const todaynullstr = ref([])
+const userinfolist = ref(false)
+const todayreadymeetroom = ref(false)
+const todaynotreadymeetroom = ref(false)
+const hosttotal = ref(24)
 const hostonline = ref(0)
 const  hostoffline = ref(0)
 const addhosttotal = ref(0)
@@ -134,59 +187,88 @@ onMounted(() => {
   hoststatistics()
 
 })
+
+const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const statusicon = (row)=> {
-      if (row.hoststatus === 1) {
-        return '在线'
+      if (row.MeetStatus === "正常") {
+        return '正常'
       } else  {
-        return '离线'
+        return '异常'
       }
 }
 const hoststatistics = () => {
 
-  axios.post('http://192.168.0.117:8081/statisticsdata', {
-    statisticstype: "hosttotal",
-  }).then(
-      reponse => {
-        hosttotal.value = reponse.data.data;
-      },
-      error => {
-        console.log("请求数据失败了:", error.message)
-      });
-  axios.post('http://192.168.0.117:8081/statisticsdata', {
-    statisticstype: "hostonline",
-  }).then(
+  axios.get('http://192.168.8.116:8080/GetInspected').then(
       reponse => {
         hostonline.value = reponse.data.data;
-        hostoffline.value= hosttotal.value - hostonline.value
-        onlinerate.value = Math.floor((hostonline.value / hosttotal.value) * 100)
-        offlinerate.value = Math.floor((hostoffline.value / hosttotal.value) * 100)
+        hostoffline.value = 24 - hostonline.value
+        onlinerate.value = Math.round((hostonline.value / 24) * 100)
+        offlinerate.value = Math.round((hostoffline.value / 24) * 100)
       },
       error => {
         console.log("请求数据失败了:", error.message)
       });
-  axios.post('http://192.168.0.117:8081/statisticsdata', {
-    statisticstype: "hostaddtoday"
-  }).then(
-      reponse => {
-        addhosttotal.value = reponse.data.data;
-      },
-      error => {
-        console.log("请求数据失败了:", error.message)
-      });
+
 }
-const tableData = ref<Hostinfo[]>([])
+const tableData = ref<meetroomdate[]>([])
 const hostlistdata = () => {
-    axios.post('http://192.168.0.117:8081/hostlistdata', {
-        typeoperation: "hostinit"
-    }).then(
+    axios.get('http://192.168.8.116:8080/Date').then(
         reponse => {
             console.log("请求数据成功")
             tableData.value = reponse.data.data;
+
         },
         error => {
             console.log("请求数据失败了:", error.message)
         });
 }
+const userlistget = () => {
+  axios.get('http://192.168.8.116:8080/GetUserInfo').then(
+      reponse => {
+        console.log("请求数据成功")
+        userlistinfodate.value = reponse.data.data;
+
+      },
+      error => {
+        console.log("请求数据失败了:", error.message)
+      });
+}
+const todaynullgetdate = () => {
+  axios.post('http://192.168.8.116:8080/GetTodayMeetroom', {
+    option: "todaynull",
+  }).then(
+      reponse => {
+        console.log("请求数据成功")
+        todaynullstr.value = reponse.data.data.flat();
+      },
+      error => {
+        console.log("请求数据失败了:", error.message)
+      });
+}
+const todaynotnullgetdate = () => {
+  axios.post('http://192.168.8.116:8080/GetTodayMeetroom', {
+    option: "today",
+  }).then(
+      reponse => {
+        console.log("请求数据成功")
+        todaynotnullstr.value = reponse.data.data.flat();
+      },
+      error => {
+        console.log("请求数据失败了:", error.message)
+      });
+}
+// 数据处理函数
+const processData = (data) => {
+  // 假设这里我们对数据进行分组，每3项一组
+  const groupSize = 3;
+  const groupedData = [];
+
+  for (let i = 0; i < data.length; i += groupSize) {
+    groupedData.push(data.slice(i, i + groupSize));
+  }
+
+  return groupedData;
+};
 
 </script>
 
