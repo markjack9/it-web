@@ -105,6 +105,7 @@
       </div>
       <div>
         <el-card class="host-card">
+          <el-button @click="hostlistdata()">刷新</el-button>
           <el-button @click="todoadditem = true">查看</el-button>
           <el-dialog
               v-model="todoadditem"
@@ -145,8 +146,17 @@
               </el-form-item>
             </el-form>
           </el-dialog>
+          <el-pagination
+              background
+              layout="prev, pager, next, sizes, total"
+              :total="tableData.length"
+              :page-size="pageSize"
+              :current-page="currentPage"
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+          />
           <el-table
-              :data="tableData"
+              :data="paginatedData"
               style="width: 100%"
               class="host-card-list"
           >
@@ -158,8 +168,30 @@
             <el-table-column prop="StartTime" label="巡检时间" width="200" align="center" />
             <el-table-column prop="Note" label="巡检记录" width="200" align="center" />
           </el-table>
+          <el-pagination
+              background
+              layout="prev, pager, next, sizes, total"
+              :total="tableData.length"
+              :page-size="pageSize"
+              :current-page="currentPage"
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+          />
         </el-card>
+        <el-button
+            class="scroll-to-top"
+            type="primary"
+            circle
+            @click="scrollToTop"
+        >
+          <div class="scroll-content">
+            <i class="el-icon-arrow-up"></i>
+            <span>返回顶部</span>
+          </div>
+        </el-button>
+
       </div>
+
     </div>
 
   </div>
@@ -178,7 +210,7 @@ import {
 } from 'element-plus'
 
 
-import {onMounted, reactive, ref} from 'vue'
+import {onMounted, computed,reactive, onBeforeUnmount,ref} from 'vue'
 import { ElTable } from 'element-plus'
 import axios from 'axios';
 interface meetroomdate {
@@ -194,6 +226,61 @@ interface User {
   value: number
   label: string
 }
+const pageSize = ref(25); // 每页显示的条数
+const currentPage = ref(1); // 当前页码
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return tableData.value.slice(start, end);
+});
+const handleSizeChange = (newSize: number) => {
+  pageSize.value = newSize;
+};
+const showScrollTop = ref(false);
+
+const handleScroll = () => {
+  showScrollTop.value = window.scrollY > 200;
+};
+
+const scrollToTop = (): void => {
+  const container = document.querySelector('.host-statistics') as HTMLElement;
+  if (container) {
+    container.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  } else {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  }
+};
+
+onMounted(() => {
+  const container = document.querySelector('.host-statistics') as HTMLElement;
+  if (container) {
+    container.addEventListener('scroll', handleScroll);
+  } else {
+    window.addEventListener('scroll', handleScroll);
+  }
+});
+
+onBeforeUnmount(() => {
+  const container = document.querySelector('.host-statistics') as HTMLElement;
+  if (container) {
+    container.removeEventListener('scroll', handleScroll);
+  } else {
+    window.removeEventListener('scroll', handleScroll);
+  }
+});
+
+// 处理页码变化
+const handleCurrentChange = (newPage: number) => {
+  currentPage.value = newPage;
+};
+
+// 状态图标格式化
 const todaynotreadymeetroom = ref(false)
 const userlist = ref<User[]>([
   { value: 5289, label: '闫秀宝' },
@@ -295,8 +382,9 @@ function getCurrentFormattedTime(): string {
 
 function addpercent(datestr: string): string {
   // 验证输入是否为空或不符合日期格式
+  const defaultDate = '%';
   if (!datestr || typeof datestr !== 'string') {
-    throw new Error('Invalid date string');
+    datestr = defaultDate;
   }
 
   // 在日期字符串后添加 '%' 符号
@@ -392,11 +480,38 @@ const todaynotnullgetdate = () => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  overflow: auto;
+  overflow-y: auto;
 }
 .host-card {
   width: 90%;
   margin-top: 20px;
+  margin-bottom: 50px; /* 增加底部空白，确保分页和浏览器底部有足够的距离 */
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 为整个区域添加阴影，提升视觉层次感 */
+}
+
+.host-card-list {
+  margin-bottom: 20px; /* 在表格和分页控件之间增加空白 */
+  background-color: #f9f9f9; /* 背景颜色为浅色，确保表格的可读性 */
+  border-radius: 8px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1); /* 表格的阴影，让其更突出 */
+}
+
+.el-pagination {
+  padding: 10px;
+  border-top: 1px solid #ebeef5;
+  background-color: #fff; /* 确保分页控件的背景色与整体风格一致 */
+  border-radius: 8px;
+}
+
+.container {
+  padding: 20px;
+  margin-bottom: 50px; /* 确保底部有足够的空间 */
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 .host-card-statistic {
   width: 90%;
@@ -406,6 +521,41 @@ const todaynotnullgetdate = () => {
   padding: 20px;
   border-radius: 4px;
   background-color: var(--el-bg-color-overlay);
+}
+.scroll-to-top {
+  position: fixed;
+  bottom: 50px;
+  right: 50px;
+  z-index: 1000;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  background-color: #409EFF;
+  color: #fff;
+  border-radius: 50%;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.scroll-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.scroll-content i {
+  font-size: 20px;
+}
+
+.scroll-content span {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.scroll-to-top:hover {
+  background-color: #66b1ff;
 }
 
 .statistic-footer {

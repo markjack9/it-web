@@ -21,15 +21,11 @@
           <template #title>历史记录查询</template>
         </el-menu-item>
         <el-menu-item @click="onswitchviewback(3)" index="3">
-          <el-icon><document /></el-icon>
+          <el-icon><Monitor /></el-icon>
           <template #title>查询设备mac地址</template>
         </el-menu-item>
         <el-menu-item @click="onswitchviewback(4)" index="4">
-          <el-icon><document /></el-icon>
-          <template #title>修改设备Vlan</template>
-        </el-menu-item>
-        <el-menu-item @click="onswitchviewback(5)" index="5">
-          <el-icon><document /></el-icon>
+          <el-icon><Switch /></el-icon>
           <template #title>交换机信息</template>
         </el-menu-item>
 
@@ -88,13 +84,12 @@ import AlarmView from "../view/Dashboard/Alarm-View.vue";
 
 import HostlistView from "../view/Dashboard/Hostlist-View.vue";
 import SelectMac from "../view/Dashboard/SelectMac.vue";
-import  ChangeMacVlan from "../view/Dashboard/ChangeMac.vue"
 import SwitchEcharts from "../view/Dashboard/SwitchEcharts.vue"
 import {
   Document,
   Menu as IconMenu,
   Location,
-  Setting, DataLine, Expand, Grid, Notebook,Minus, Plus,
+  Setting, DataLine, Expand, Grid, Notebook, Minus, Plus, Monitor, Switch,
 } from '@element-plus/icons-vue'
 const isCollapse = ref(false)
 
@@ -109,11 +104,9 @@ const onswitchviewback = (key:number) => {
   } else  if (key === 3) {
     comId.value = SelectMac
   } else  if (key === 4) {
-    comId.value = ChangeMacVlan
-  }
-  else  if (key === 5) {
     comId.value = SwitchEcharts
   }
+
 }
 let ifcolapse:boolean = isCollapse.value
 const leftif= () =>{
